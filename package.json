@@ -1,0 +1,16 @@
+{
+  "name": "ally-my-app",
+  "version": "1.0.0",
+  "bin": {
+    "ally-my-app": "cli.js"
+  },
+  "type": "module",
+  "dependencies": {
+    "degit": "^2.8.4",
+    "fs-extra": "^11.3.1",
+    "prompts": "^2.4.2"
+  },
+  "devDependencies": {
+    "eslint": "^9.33.0"
+  }
+}
