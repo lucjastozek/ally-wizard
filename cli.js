@@ -125,7 +125,7 @@ const run = async () => {
 
   if (tools.length > 0) {
     console.log("⚙️ Adding scripts to package.json...");
-    pkg.scripts["preview"] = "vite preview"
+    pkg.scripts["preview"] = "vite preview";
   }
 
   if (tools.includes("axe")) {
@@ -150,22 +150,23 @@ const run = async () => {
     if (cmds.length > 0) {
       pkg.scripts["a11y:all"] = `concurrently "${cmds.join('" "')}"`;
     }
+
+    fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2));
+
+    if (cmds.length > 0) {
+      install(["concurrently"]);
+    }
+
+    console.log("✅ Added accessibility scripts to package.json");
   }
 
-  fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2));
+  if (ci) {
+    const WORKFLOWS_DIR = "./.github/workflows";
+    fs.mkdirSync(WORKFLOWS_DIR, { recursive: true });
 
-  if (cmds.length > 0) {
-    install(["concurrently"]);
-  }
+    const toolsArray = `[${tools.map((tool) => (tool === "axe" ? "axe-core" : tool)).join(", ")}]`;
 
-  console.log("✅ Added accessibility scripts to package.json");
-
-  const WORKFLOWS_DIR = "./.github/workflows";
-  fs.mkdirSync(WORKFLOWS_DIR, { recursive: true });
-
-  const toolsArray = `[${tools.map((tool) => (tool === "axe" ? "axe-core" : tool)).join(", ")}]`;
-
-  const workflowContent = `name: Accessibility Testing
+    const workflowContent = `name: Accessibility Testing
 
 on:
   push:
@@ -216,10 +217,10 @@ jobs:
         with:
           path: dist
           key: \${{ runner.os }}-build-\${{ github.sha }}
-${
-  tools.includes("axe")
-    ? `
-  axe-core:
+
+  ${
+    tools.includes("axe")
+      ? `axe-core:
     name: Axe Core Accessibility Testing
     runs-on: ubuntu-latest
     needs: setup
@@ -299,14 +300,12 @@ ${
           path: |
             axe-results.json
             axe-results/
-      
-      `
-    : ""
-}  
-${
-  tools.includes("lighthouse")
-    ? `
-  lighthouse:
+            `
+      : ""
+  }  
+  ${
+    tools.includes("lighthouse")
+      ? `lighthouse:
     name: Lighthouse Accessibility & Performance
     runs-on: ubuntu-latest
     needs: setup
@@ -401,15 +400,12 @@ ${
         with:
           name: lighthouse-results
           path: lighthouse-results/
-
-`
-    : ""
-}
-
-${
-  tools.includes("pa11y")
-    ? `
-  pa11y:
+          `
+      : ""
+  }
+  ${
+    tools.includes("pa11y")
+      ? `pa11y:
     name: Pa11y Accessibility Testing
     runs-on: ubuntu-latest
     needs: setup
@@ -493,10 +489,9 @@ ${
           path: |
             pa11y-results.json
             pa11y-results/
-
-`
-    : ""
-}
+            `
+      : ""
+  }
   accessibility-comment:
     name: Accessibility Test Summary Comment
     runs-on: ubuntu-latest
@@ -548,25 +543,19 @@ ${
             // Get job results
             ${
               tools.includes("axe")
-                ? `
-            const axeResult = '\${{ needs.axe-core.result }}';
-            `
+                ? `const axeResult = '\${{ needs.axe-core.result }}';`
                 : ""
             }
-                ${
-                  tools.includes("lighthouse")
-                    ? `
-            const lighthouseResult = '\${{ needs.lighthouse.result }}';
-            `
-                    : ""
-                }
-                ${
-                  tools.includes("pa11y")
-                    ? `
-            const pa11yResult = '\${{ needs.pa11y.result }}';
-            `
-                    : ""
-                }
+            ${
+              tools.includes("lighthouse")
+                ? `const lighthouseResult = '\${{ needs.lighthouse.result }}';`
+                : ""
+            }
+            ${
+              tools.includes("pa11y")
+                ? `const pa11yResult = '\${{ needs.pa11y.result }}';`
+                : ""
+            }
 
             // Helper function to get status emoji and text
             function getStatusDisplay(result) {
@@ -581,30 +570,23 @@ ${
 
             ${
               tools.includes("axe")
-                ? `
-            const axeStatus = getStatusDisplay(axeResult);
-            `
+                ? `const axeStatus = getStatusDisplay(axeResult);`
                 : ""
             }
             ${
               tools.includes("lighthouse")
-                ? `
-            const lighthouseStatus = getStatusDisplay(lighthouseResult);
-            `
+                ? `const lighthouseStatus = getStatusDisplay(lighthouseResult);`
                 : ""
             }
             ${
               tools.includes("pa11y")
-                ? `
-            const pa11yStatus = getStatusDisplay(pa11yResult);
-            `
+                ? `const pa11yStatus = getStatusDisplay(pa11yResult);`
                 : ""
             }
 
             ${
               tools.includes("lighthouse")
-                ? `
-            // Read routes that were tested
+                ? `// Read routes that were tested
             let testedRoutes = 'Unknown';
             try {
               if (fs.existsSync('lighthouse-results/summary.txt')) {
@@ -616,8 +598,7 @@ ${
               }
             } catch (error) {
               console.log('Could not read lighthouse summary:', error.message);
-            }
-                `
+            }`
                 : ""
             }
             // Count issues if available
@@ -625,22 +606,18 @@ ${
             try {
             ${
               tools.includes("axe")
-                ? `
-              // Try to read Axe results
+                ? `// Try to read Axe results
               if (fs.existsSync('axe-accessibility-results/axe-results.json')) {
                 const axeData = JSON.parse(fs.readFileSync('axe-accessibility-results/axe-results.json', 'utf8'));
                 if (axeData.violations && axeData.violations.length > 0) {
                   issueDetails += \`\\n**Axe Issues Found:** \${axeData.violations.length} violation(s)\`;
                 }
-              }
-            
-            `
+              }`
                 : ""
             }
             ${
               tools.includes("pa11y")
-                ? `
-              // Try to read Pa11y results  
+                ? `// Try to read Pa11y results  
               if (fs.existsSync('pa11y-accessibility-results/pa11y-results.json')) {
                 const pa11yData = JSON.parse(fs.readFileSync('pa11y-accessibility-results/pa11y-results.json', 'utf8'));
                 if (pa11yData.results && pa11yData.results.length > 0) {
@@ -649,8 +626,7 @@ ${
                     issueDetails += \`\\n**Pa11y Issues Found:** \${totalIssues} issue(s)\`;
                   }
                 }
-              }
-            `
+              }`
                 : ""
             }  
             } catch (error) {
@@ -663,25 +639,19 @@ ${
             |------|--------|--------|
             ${
               tools.includes("axe")
-                ? `
-            | **Axe Core** | \${axeStatus.emoji} | \${axeStatus.text} |
-            `
+                ? `| **Axe Core** | \${axeStatus.emoji} | \${axeStatus.text} |`
                 : ""
             }
-                ${
-                  tools.includes("lighthouse")
-                    ? `
-            | **Lighthouse** | \${lighthouseStatus.emoji} | \${lighthouseStatus.text} |
-            `
-                    : ""
-                }
-                    ${
-                      tools.includes("pa11y")
-                        ? `
-            | **Pa11y** | \${pa11yStatus.emoji} | \${pa11yStatus.text} |
-            `
-                        : ""
-                    }
+            ${
+              tools.includes("lighthouse")
+                ? `| **Lighthouse** | \${lighthouseStatus.emoji} | \${lighthouseStatus.text} |`
+                : ""
+            }
+            ${
+              tools.includes("pa11y")
+                ? `| **Pa11y** | \${pa11yStatus.emoji} | \${pa11yStatus.text} |`
+                : ""
+            }
 
             Download detailed results from the **Artifacts** section of this workflow run
 
@@ -712,57 +682,45 @@ ${
 
           ${
             tools.includes("axe")
-              ? `
-          # Check Axe results
+              ? `# Check Axe results
           if [ "\${{ needs.axe-core.result }}" = "success" ]; then
             echo "✅ **Axe Core**: All accessibility tests passed" >> $GITHUB_STEP_SUMMARY
           else
             echo "❌ **Axe Core**: Accessibility issues found" >> $GITHUB_STEP_SUMMARY
-          fi
-          
-          `
+          fi`
               : ""
           }
           ${
             tools.includes("lighthouse")
-              ? `
-          # Check Lighthouse results
+              ? `# Check Lighthouse results
           if [ "\${{ needs.lighthouse.result }}" = "success" ]; then
             echo "✅ **Lighthouse**: Performance and accessibility scores met thresholds" >> $GITHUB_STEP_SUMMARY
           else
             echo "⚠️ **Lighthouse**: Performance or accessibility scores below threshold" >> $GITHUB_STEP_SUMMARY
-          fi
-          
-          `
+          fi`
               : ""
           }
           ${
             tools.includes("lighthouse")
-              ? `
-          # Check Pa11y results
+              ? `# Check Pa11y results
           if [ "\${{ needs.pa11y.result }}" = "success" ]; then
             echo "✅ **Pa11y**: No accessibility violations detected" >> $GITHUB_STEP_SUMMARY
           else
             echo "❌ **Pa11y**: Accessibility violations found" >> $GITHUB_STEP_SUMMARY
-          fi
-          
-          `
+          fi`
               : ""
           }
-
-
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "📊 **Test artifacts are available for download in the workflow run**" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY`;
 
-`;
+    fs.writeFileSync(
+      path.join(WORKFLOWS_DIR, "accessibility.yml"),
+      workflowContent
+    );
 
-  fs.writeFileSync(
-    path.join(WORKFLOWS_DIR, "accessibility.yml"),
-    workflowContent
-  );
-
-  console.log("✅ accessibility.yml generated");
+    console.log("✅ accessibility.yml generated");
+  }
 
   if (lint) {
     console.log("📦 Adding eslint-plugin-jsx-a11y...");
@@ -775,7 +733,7 @@ ${
       if (!content.includes('import jsxA11y from "eslint-plugin-jsx-a11y"')) {
         content = content.replace(
           /(import.*?from.*?['"].*['"];?\s*)/s,
-          `$1import jsxA11y from "eslint-plugin-jsx-a11y";\n`
+          `import jsxA11y from "eslint-plugin-jsx-a11y";\n$1`
         );
       }
 
