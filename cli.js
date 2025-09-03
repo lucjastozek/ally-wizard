@@ -18,6 +18,74 @@ function detectPkgManager() {
 
 const PACKAGE_MANAGER = detectPkgManager();
 
+// Colors for terminal output
+const colors = {
+  reset: "\x1b[0m",
+  bright: "\x1b[1m",
+  dim: "\x1b[2m",
+  italic: "\x1b[3m",
+  cyan: "\x1b[36m",
+  green: "\x1b[32m",
+  yellow: "\x1b[33m",
+  blue: "\x1b[34m",
+  magenta: "\x1b[35m",
+  gray: "\x1b[90m",
+};
+
+// Helper function to make our messages stand out
+function logMessage(message, type = "info") {
+  const separator = "─".repeat(60);
+
+  switch (type) {
+    case "header":
+      console.log(
+        `\n${colors.magenta}${colors.bright}╭${separator}╮${colors.reset}`
+      );
+      console.log(
+        `${colors.magenta}${colors.bright}│ ${message.padEnd(58)} │${colors.reset}`
+      );
+      console.log(
+        `${colors.magenta}${colors.bright}╰${separator}╯${colors.reset}\n`
+      );
+      break;
+    case "section":
+      console.log(`\n${colors.reset}${colors.bright}${message}${colors.reset}`);
+      break;
+    case "success":
+      console.log(
+        `${colors.green}${colors.bright}✓ ${colors.reset}${message}${colors.reset}`
+      );
+      break;
+    case "info":
+      console.log(`${colors.cyan}• ${colors.reset}${message}${colors.reset}`);
+      break;
+    case "warning":
+      console.log(
+        `${colors.yellow}⚠ ${colors.reset}${message}${colors.reset}`
+      );
+      break;
+    case "command":
+      console.log(
+        `${colors.magenta}  ${colors.reset}${message}${colors.reset}`
+      );
+      break;
+    case "external":
+      console.log(`${colors.gray}${colors.dim}  ${message}${colors.reset}`);
+      break;
+    default:
+      console.log(message);
+  }
+}
+
+function formatExternalOutput(output) {
+  return output
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0)
+    .map((line) => `${colors.gray}${colors.dim}  ${line}${colors.reset}`)
+    .join("\n");
+}
+
 function install(pkgs, dev = true) {
   let cmd = "";
   const pkgsList = Array.isArray(pkgs) ? pkgs.join(" ") : pkgs;
@@ -30,8 +98,32 @@ function install(pkgs, dev = true) {
     cmd = `npm install ${dev ? "--save-dev " : ""}${pkgsList}`;
   }
 
-  console.log(`➡️ Installing: ${pkgsList} with ${PACKAGE_MANAGER}...`);
-  execSync(cmd, { stdio: "inherit" });
+  try {
+    console.log();
+    console.log(
+      `${colors.gray}${colors.dim}┌─ Package manager output:${colors.reset}`
+    );
+
+    const output = execSync(cmd, {
+      encoding: "utf8",
+      stdio: "pipe",
+    });
+
+    if (output && output.trim()) {
+      const formattedOutput = formatExternalOutput(output);
+      console.log(formattedOutput);
+    }
+
+    console.log(
+      `${colors.gray}${colors.dim}└─ Package installation completed${colors.reset}`
+    );
+    console.log();
+  } catch (error) {
+    console.log(
+      `${colors.gray}${colors.dim}└─ Package installation completed with warnings${colors.reset}`
+    );
+    console.log();
+  }
 }
 
 function copyFileFromTemplate(srcFile, destDir = ".") {
@@ -43,7 +135,7 @@ function copyFileFromTemplate(srcFile, destDir = ".") {
 }
 
 const run = async () => {
-  console.log("🚀 Welcome to ally-my-app setup!");
+  logMessage("Welcome to ally-my-app!", "header");
 
   const { axe } = await prompts({
     type: "toggle",
@@ -100,8 +192,13 @@ const run = async () => {
     inactive: "no",
   });
 
-  console.log("\n✅ Config chosen:");
-  console.log({ tools, ci, lint });
+  logMessage("Configuration Summary", "section");
+  logMessage(
+    `Selected tools: ${tools.length > 0 ? tools.join(", ") : "none"}`,
+    "info"
+  );
+  logMessage(`CI integration: ${ci ? "enabled" : "disabled"}`, "info");
+  logMessage(`Accessibility linting: ${lint ? "enabled" : "disabled"}`, "info");
 
   const NAMES_TO_DEPS = {
     pa11y: "pa11y",
@@ -112,12 +209,17 @@ const run = async () => {
   // execution
 
   if (tools.length > 0) {
-    console.log("📦 Installing accessibility testing tools...");
+    logMessage("Installing accessibility testing tools", "section");
+    logMessage(
+      "This may take a moment depending on your internet connection.",
+      "info"
+    );
     install(tools.map((tool) => NAMES_TO_DEPS[tool]));
 
     if (tools.includes("lighthouse")) {
-      console.log("⚙️ Adding Lighthouse config...");
+      logMessage("Setting up Lighthouse configuration", "section");
       copyFileFromTemplate("lighthouserc.json");
+      logMessage("Lighthouse config file created successfully!", "success");
     }
   }
 
@@ -127,7 +229,7 @@ const run = async () => {
   if (!pkg.scripts) pkg.scripts = {};
 
   if (tools.length > 0) {
-    console.log("⚙️ Adding scripts to package.json...");
+    logMessage("Adding accessibility scripts to package.json", "section");
     pkg.scripts["preview"] = "vite preview";
   }
 
@@ -160,10 +262,18 @@ const run = async () => {
       install(["concurrently"]);
     }
 
-    console.log("✅ Added accessibility scripts to package.json");
+    logMessage(
+      "Successfully added accessibility scripts to package.json",
+      "success"
+    );
   }
 
   if (ci) {
+    logMessage(
+      "Setting up CI/CD workflow for accessibility testing",
+      "section"
+    );
+
     const WORKFLOWS_DIR = "./.github/workflows";
     fs.mkdirSync(WORKFLOWS_DIR, { recursive: true });
 
@@ -722,11 +832,11 @@ jobs:
       workflowContent
     );
 
-    console.log("✅ accessibility.yml generated");
+    logMessage("Accessibility workflow generated successfully!", "success");
   }
 
   if (lint) {
-    console.log("📦 Adding eslint-plugin-jsx-a11y...");
+    logMessage("Setting up accessibility linting", "section");
     install(["eslint-plugin-jsx-a11y"]);
 
     const eslintPath = path.join(process.cwd(), "eslint.config.js");
@@ -753,11 +863,71 @@ jobs:
       }
 
       fs.writeFileSync(eslintPath, content);
-      console.log("✅ Updated eslint.config.js with jsx-a11y plugin");
+      logMessage("Updated eslint.config.js with jsx-a11y plugin", "success");
+    } else {
+      logMessage(
+        "Warning: No eslint.config.js found. Please configure eslint-plugin-jsx-a11y manually.",
+        "warning"
+      );
     }
   }
 
-  console.log("\n✨ Done! Your project is now boosted with accessibility!");
+  logMessage("Setup completed successfully!", "header");
+
+  if (tools.length > 0) {
+    logMessage("Next steps:", "section");
+    logMessage("1. Start your development server", "info");
+    logMessage("2. Run your accessibility tests:", "info");
+    if (tools.includes("axe")) logMessage(`   • ${pmCmd} a11y:axe`, "command");
+    if (tools.includes("pa11y"))
+      logMessage(`   • ${pmCmd} a11y:pa11y`, "command");
+    if (tools.includes("lighthouse"))
+      logMessage(`   • ${pmCmd} a11y:lighthouse`, "command");
+    if (tools.length > 1)
+      logMessage(`   • ${pmCmd} a11y:all (runs all tests)`, "command");
+  }
+
+  if (ci && tools.length > 0) {
+    logMessage("CI Setup Required:", "section");
+    logMessage("To enable automated testing in GitHub Actions:", "info");
+    logMessage("1. Go to your repository settings", "info");
+    logMessage("2. Navigate to 'Secrets and variables' > 'Actions'", "info");
+    logMessage("3. Add a new secret: A11Y_GITHUB_TOKEN", "info");
+    logMessage("4. Use a GitHub token with repo permissions", "info");
+    logMessage(
+      "Learn more: https://docs.github.com/en/actions/security-guides/encrypted-secrets",
+      "info"
+    );
+  }
+
+  if (lint) {
+    logMessage("Linting Setup Complete:", "section");
+    logMessage(
+      "Your editor will now show accessibility warnings in JSX files.",
+      "info"
+    );
+    logMessage(
+      `Run your linter to see accessibility issues: ${pmCmd} lint`,
+      "command"
+    );
+  }
+
+  if (tools.length > 0) {
+    logMessage("For more information about your selected tools:", "section");
+    if (tools.includes("axe"))
+      logMessage("Axe: https://www.deque.com/axe/", "info");
+    if (tools.includes("pa11y"))
+      logMessage("Pa11y: https://pa11y.org/", "info");
+    if (tools.includes("lighthouse"))
+      logMessage(
+        "Lighthouse: https://developers.google.com/web/tools/lighthouse",
+        "info"
+      );
+    logMessage(
+      "WCAG Guidelines: https://www.w3.org/WAI/WCAG21/quickref/",
+      "info"
+    );
+  }
 };
 
 run();
