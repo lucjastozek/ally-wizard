@@ -78,14 +78,17 @@ const run = async () => {
   if (lighthouse) tools.push("lighthouse");
 
   // 2. CI integration - to be added later
-  const { ci } = await prompts({
-    type: "toggle",
-    name: "ci",
-    message: "Would you like to integrate them into your CI workflow?",
-    initial: true,
-    active: "yes",
-    inactive: "no",
-  });
+  const { ci } =
+    tools.length < 1
+      ? { ci: false }
+      : await prompts({
+          type: "toggle",
+          name: "ci",
+          message: "Would you like to integrate them into your CI workflow?",
+          initial: true,
+          active: "yes",
+          inactive: "no",
+        });
 
   // 3. Accessibility linting
   const { lint } = await prompts({
