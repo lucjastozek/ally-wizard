@@ -499,7 +499,7 @@ jobs:
     name: Accessibility Test Summary Comment
     runs-on: ubuntu-latest
     needs: ${toolsArray}
-    if: github.event_name == 'pull_request'
+    if: always() && github.event_name == 'pull_request'
     permissions:
       contents: read
       pull-requests: write
