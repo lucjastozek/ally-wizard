@@ -704,7 +704,7 @@ jobs:
               : ""
           }
           ${
-            tools.includes("lighthouse")
+            tools.includes("pa11y")
               ? `# Check Pa11y results
           if [ "\${{ needs.pa11y.result }}" = "success" ]; then
             echo "✅ **Pa11y**: No accessibility violations detected" >> $GITHUB_STEP_SUMMARY
