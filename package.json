@@ -1,8 +1,8 @@
 {
-  "name": "ally-my-app",
+  "name": "ally-wizard",
   "version": "1.0.0",
   "bin": {
-    "ally-my-app": "cli.js"
+    "ally-wizard": "cli.js"
   },
   "type": "module",
   "dependencies": {
