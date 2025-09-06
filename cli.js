@@ -15,7 +15,7 @@ import {
 
 async function runApplication() {
   try {
-    logMessage("Welcome to ally-my-app!", MESSAGE_TYPES.HEADER);
+    logMessage("Welcome to Ally Wizard!", MESSAGE_TYPES.HEADER);
 
     const packageManager = detectPackageManager();
     const { selectedTools, ci, lint } = await getUserPreferences();
@@ -29,29 +29,29 @@ async function runApplication() {
     if (selectedTools.length > 0) {
       logMessage(
         "Adding accessibility scripts to package.json",
-        MESSAGE_TYPES.SECTION,
+        MESSAGE_TYPES.SECTION
       );
 
       packageManagerCommand = updatePackageJsonWithScripts(
         selectedTools,
-        packageManager,
+        packageManager
       );
 
       logMessage(
         "Successfully added accessibility scripts to package.json",
-        MESSAGE_TYPES.SUCCESS,
+        MESSAGE_TYPES.SUCCESS
       );
     }
 
     if (ci && selectedTools.length > 0) {
       logMessage(
         "Setting up CI/CD workflow for accessibility testing",
-        MESSAGE_TYPES.SECTION,
+        MESSAGE_TYPES.SECTION
       );
       generateCIWorkflow(selectedTools);
       logMessage(
         "Accessibility workflow generated successfully!",
-        MESSAGE_TYPES.SUCCESS,
+        MESSAGE_TYPES.SUCCESS
       );
     }
 
