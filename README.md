@@ -6,8 +6,7 @@
   <img alt="Ally Wizard logo" src="assets/ally-wizard-banner-light.png" width="3120.1">
 </picture>
 
-Tired of promising yourself you’ll “fix accessibility later”?
-This little CLI helps you add accessibility testing, linting, and CI/CD to your existing React app right now - no pain, no excuses.
+Worried about putting off those key accessibility upgrades? This CLI makes it super easy to add accessibility testing, linting, and CI/CD to your React app right now, helping you make a real impact without spending a ton of time on it!
 
 ## Quick Start
 
@@ -15,7 +14,9 @@ This little CLI helps you add accessibility testing, linting, and CI/CD to your 
 npx ally-wizard
 ```
 
-Run it inside your React project. Answer a few questions. Get accessibility superpowers. Done!
+Run it inside your React project. Answer a few questions. Done!
+
+![Terminal demo of ally wizard CLI tool](./assets/ally-wizard-cli.gif)
 
 ## What You Can Add
 
@@ -37,15 +38,14 @@ Run it inside your React project. Answer a few questions. Get accessibility supe
 
 Because accessibility isn't an optional extra - it makes the web better for everyone:
 
-- ✅ More people can use and enjoy your app
-- ✅ Good a11y = better overall UX
-- ✅ Many regions legally require it
+- More people can use and enjoy your app
+- Good a11y = better overall UX
+- Many regions legally require it
 
 ## Tips & Troubleshooting
 
 - Your React app should be running on `localhost:3000` before testing
 - Needs Node.js installed
-- Works with npm, yarn, or pnpm (auto-detected)
 
 ---
 
