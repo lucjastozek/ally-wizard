@@ -110,7 +110,7 @@ async function runApplication() {
 
     displayNextSteps(selectedTools, packageManagerCommand, ci, lint);
   } catch (error) {
-    logMessage(`An error occurred: ${error.message}`, MESSAGE_TYPES.ERROR);
+    logMessage(error.message, MESSAGE_TYPES.ERROR);
     logMessage("Please check your setup and try again.", MESSAGE_TYPES.INFO);
 
     process.exit(1);
