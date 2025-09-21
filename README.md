@@ -44,7 +44,7 @@ Because accessibility isn't an optional extra - it makes the web better for ever
 
 ## Tips & Troubleshooting
 
-- Your React app should be running on `localhost:3000` before testing
+- Your React app should be running on `localhost:3000` before testing (`vite --port 3000`)
 - Needs Node.js installed
 
 ---
