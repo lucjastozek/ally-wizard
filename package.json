@@ -1,6 +1,6 @@
 {
   "name": "ally-wizard",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "bin": {
     "ally-wizard": "cli.js"
   },
